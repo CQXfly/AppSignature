@@ -1,8 +1,13 @@
-# hackernews-async-ts
+# AppSignature ts
 
-[Hacker News](https://news.ycombinator.com/) showcase using typescript && egg
+  using typescript && egg
 
 ## QuickStart
+```bash
+$ npm run celan
+$ npm run ci
+$ npm run start
+```
 
 ### Development
 
