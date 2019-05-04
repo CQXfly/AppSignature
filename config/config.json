@@ -1,7 +1,7 @@
 {
     "development": {
-      "username": "root",
-      "password": "fox123456",
+      "username": "vapor",
+      "password": "q123456",
       "database": "AppSignature",
       "host": "127.0.0.1",
       "dialect": "postgres",
@@ -15,23 +15,23 @@
       }
     },
     "test": {
-      "username": "root",
-      "password": null,
-      "database": "gaokao",
+      "username": "vapor",
+      "password": "q123456",
+      "database": "AppSignature",
       "host": "127.0.0.1",
-      "dialect": "mysql",
+      "dialect": "postgres",
       "dialectOptions": {
-        "charset": "utf8mb4"
+        "charset": "utf8"
       }
     },
     "production": {
-      "username": "root",
-      "password": null,
-      "database": "gaokao",
-      "host": "118.24.149.220",
-      "dialect": "mysql",
+      "username": "vapor",
+      "password": "q123456",
+      "database": "AppSignature",
+      "host": "127.0.0.1",
+      "dialect": "postgres",
       "dialectOptions": {
-        "charset": "utf8mb4"
+        "charset": "utf8"
       }
     }
   

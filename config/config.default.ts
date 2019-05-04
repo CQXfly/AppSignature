@@ -28,8 +28,8 @@ export default (appInfo: EggAppInfo) => {
       database: 'AppSignature',
       host: '127.0.0.1',
       port: '5432',
-      username: 'root',
-      password: 'fox123456',
+      username: 'vapor',
+      password: 'q123456',
     },
   };
 
