@@ -1,0 +1,38 @@
+{
+    "development": {
+      "username": "root",
+      "password": "fox123456",
+      "database": "AppSignature",
+      "host": "127.0.0.1",
+      "dialect": "postgres",
+      "dialectOptions": {
+        "charset": "utf8"
+      },
+      "pool": {
+        "max": 10,
+        "min": 0,
+        "idle": 100000
+      }
+    },
+    "test": {
+      "username": "root",
+      "password": null,
+      "database": "gaokao",
+      "host": "127.0.0.1",
+      "dialect": "mysql",
+      "dialectOptions": {
+        "charset": "utf8mb4"
+      }
+    },
+    "production": {
+      "username": "root",
+      "password": null,
+      "database": "gaokao",
+      "host": "118.24.149.220",
+      "dialect": "mysql",
+      "dialectOptions": {
+        "charset": "utf8mb4"
+      }
+    }
+  
+  }
