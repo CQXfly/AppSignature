@@ -1,7 +1,7 @@
 {
     "development": {
-      "username": "vapor",
-      "password": "q123456",
+      "username": "root",
+      "password": "fox123456",
       "database": "AppSignature",
       "host": "127.0.0.1",
       "dialect": "postgres",

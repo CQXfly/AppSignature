@@ -88,7 +88,7 @@ export default class AppController extends Controller {
               certUdid, cerName, provisionName,
               expirationDate, provisionType} = ctx.request.body;
       // app是否注册
-      const registerApp = await ctx.service.app.app_is_register(appName);
+      const registerApp = await ctx.service.app.app_is_register(appName, bundleid);
 
       let uplogs: any[];
       const startTime = (new Date()).getTime();
@@ -155,8 +155,8 @@ export default class AppController extends Controller {
       const { ctx } = this;
       ctx.logger.info('register');
       ctx.validate(createRuleAppName, ctx.query);
-      const { appName } = ctx.query;
-      const registerApp = await ctx.service.app.app_is_register(appName);
+      const { appName, bundleid } = ctx.query;
+      const registerApp = await ctx.service.app.app_is_register(appName, bundleid);
       if (registerApp === null) {
           ctx.body = Result.error(400, 'app未注册，请联系(3469019435)');
       } else {
@@ -257,14 +257,15 @@ export default class AppController extends Controller {
     const { ctx } = this;
     ctx.logger.info(ctx.query);
     ctx.validate(createRuleAppName, ctx.query);
-    const { appName } = ctx.query;
+    const { appName, bundleid } = ctx.query;
     // if (appName == null) {
     //     ctx.body = Result.error(400, '缺省参数 appName');
-    // }
+    //
     try {
         const r = await ctx.model.Appmodel.findOne({
             where: {
                 app_name: appName,
+                bundleid,
             },
         });
         ctx.body = Result.Sucess(r);
@@ -277,13 +278,15 @@ export default class AppController extends Controller {
     const { ctx } = this;
     ctx.logger.info(ctx.query);
     ctx.validate(createRuleAppName, ctx.query);
+    const { appName, bundleid } = ctx.query;
     try {
-        await ctx.model.Appmodel.destroy({
+        const r = await ctx.model.Appmodel.destroy({
             where: {
-                app_name: ctx.query.appName,
+                app_name: appName,
+                bundleid,
             },
         });
-        ctx.body = Result.default(200, '删除成功');
+        ctx.body = Result.default(200, r === 1 ? '删除成功' : '删除失败');
     } catch (e) {
         ctx.body = Result.ServerError();
     }
@@ -294,11 +297,12 @@ export default class AppController extends Controller {
     ctx.logger.info(ctx.request.body);
     ctx.validate(createRuleAppName, ctx.request.body);
     ctx.validate(createRuleShowMessage, ctx.request.body);
-    const { appName, showMsg, showUrl, forceEnable } = ctx.request.body;
+    const { appName, showMsg, showUrl, forceEnable, bundleid } = ctx.request.body;
     try {
         const r = await ctx.model.Appmodel.findOne({
             where: {
                 app_name: appName,
+                bundleid,
             },
         });
         if (r === null) {
@@ -327,12 +331,13 @@ export default class AppController extends Controller {
     ctx.logger.info(ctx.request.body);
     ctx.validate(createRuleAppName, ctx.request.body);
     ctx.validate(createRuleValidDay, ctx.request.body);
-    const { appName, validDay } = ctx.request.body;
+    const { appName, validDay, bundleid } = ctx.request.body;
     try {
 
         const r = await ctx.model.Appmodel.findOne({
             where: {
                 app_name: appName,
+                bundleid,
             },
         });
         if (r === null) {
@@ -348,6 +353,7 @@ export default class AppController extends Controller {
         }, {
             where: {
                 app_name: appName,
+                bundleid,
             },
         });
 
@@ -363,11 +369,12 @@ export default class AppController extends Controller {
     ctx.logger.info(ctx.request.body);
     ctx.validate(createRuleAppName, ctx.request.body);
     ctx.validate(createRuleMaxSupportDevice, ctx.request.body);
-    const { appName, maxInstallNum } = ctx.request.body;
+    const { appName, maxInstallNum, bundleid } = ctx.request.body;
     try {
         const r = await ctx.model.Appmodel.findOne({
             where: {
                 app_name: appName,
+                bundleid,
             },
         });
         if (r === null) {
@@ -379,6 +386,7 @@ export default class AppController extends Controller {
         }, {
             where: {
                 app_name: appName,
+                bundleid,
             },
         });
 
@@ -415,27 +423,38 @@ export default class AppController extends Controller {
   public async dayGrowth() {
       const { ctx } = this;
       ctx.validate(createRuleAppName, ctx.query);
-      const { appName } = ctx.query;
+      const { appName, bundleid } = ctx.query;
       const startTime = moment().startOf('D').valueOf();
       const endTime = moment().endOf('D').valueOf();
-      const r = await ctx.app.model.query('select app_name as appName, COUNT(*) as num from devices where app_name = :appName and noncestr > :startTime and noncestr < :endTime group by app_name', {
+
+      const r0 = await ctx.model.Appmodel.findOne({
+          where: {
+              app_name: appName,
+              bundleid,
+          },
+      });
+      if (r0 === null) {
+          ctx.body = Result.error(404, `not found app: ${appName}\n bundleid: ${bundleid}`);
+          return;
+      }
+      const r = await ctx.app.model.query('select app_name as appName, COUNT(*) as num from devices where appid = :appid and noncestr > :startTime and noncestr < :endTime group by app_name', {
           replacements: {
-            appName,
+            appid: r0.id,
             startTime,
             endTime,
           },
       });
-      ctx.body = Result.Sucess(r[0]);
+      ctx.body = Result.Sucess(r[0][0]);
   }
 
   public async appMonthActive() {
     const { ctx } = this;
     ctx.validate(createRuleAppName, ctx.query);
-    const { appName } = ctx.query;
+    const { appName, bundleid } = ctx.query;
     const startTime = moment().startOf('M').valueOf();
     const endTime = moment().endOf('M').valueOf();
     try {
-        const count = await ctx.service.device.appActiveCount(startTime, endTime, appName);
+        const count = await ctx.service.device.appActiveCount(startTime, endTime, appName, bundleid);
         ctx.body = Result.Sucess({
             month: count,
         });

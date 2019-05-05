@@ -84,7 +84,7 @@ export default class UserController extends Controller {
   public async bindToApp() {
     const { ctx } = this;
     ctx.validate(createRuleBindToApp, ctx.request.body);
-    const { userAccount, email, appName } = ctx.request.body;
+    const { userAccount, email, appName, bundleid } = ctx.request.body;
 
     try {
       let userid;
@@ -109,6 +109,7 @@ export default class UserController extends Controller {
       }, {
         where: {
           app_name: appName,
+          bundleid,
         },
       });
       ctx.body = Result.default(200, x[0] === 0 ? '绑定失败 请查看是否有该app' : '绑定成功');

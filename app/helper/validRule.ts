@@ -1,5 +1,6 @@
 const createRuleAppName = {
     appName: 'string',
+    bundleid: 'string',
 };
 
 const createRuleShowMessage = {
@@ -49,6 +50,7 @@ const createRuleUploadAppDevice = {
 
 const createRuleBindToApp = {
     appName : 'string',
+    bundleid: 'string',
     userAccount: 'string',
     email: 'string',
 };

@@ -42,14 +42,29 @@ export default class DeviceController extends Controller {
     ctx.logger.info(noncestr);
     // 查询设备是否存过
     try {
+        // 查询是否与app绑定
+        const appmodel: any = await ctx.model.Appmodel.findOne({
+          where: {
+              app_name: appName,
+              bundle_version: bundleVersion,
+              bundleid,
+          },
+        });
+
+        if (appmodel === null) {
+          ctx.body = Result.default(400, '不存在该app');
+          return;
+        }
+
         const r: any = await ctx.model.Devicemodel.findOne({
-            where: {
-              dev_udid: devUdid,
-            },
+          where: {
+            dev_udid: devUdid,
+          },
         });
         if (r === null) {
           // 存入数据库
           await ctx.model.Devicemodel.upsert({
+              appid: appmodel.id,
               app_name: appName,
               dev_udid: devUdid,
               isp_name: ispName,
@@ -66,19 +81,6 @@ export default class DeviceController extends Controller {
 
           ctx.body = Result.default(200, '绑定成功');
         } else {
-            // 查询是否与app绑定
-            const appmodel: any = await ctx.model.Appmodel.findOne({
-                where: {
-                    app_name: appName,
-                    bundle_version: bundleVersion,
-                    bundleid,
-                },
-            });
-
-            if (appmodel === null) {
-              ctx.body = Result.default(400, '不存在该app');
-              return;
-            }
 
             const p1 = ctx.model.Devicemodel.update({
               appid: appmodel.id,
@@ -138,7 +140,7 @@ export default class DeviceController extends Controller {
         try {
             const count = await ctx.service.device.activeCount(start, end);
             return ctx.body = Result.Sucess({
-                dayActive: count,
+                weekActive: count,
             });
         } catch (e) {
             ctx.body = Result.ServerError();

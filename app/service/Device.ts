@@ -32,10 +32,11 @@ export default class Device extends Service {
     return r3[0][0];
   }
 
-  public async appActiveCount(startTime: number, endTime: number, appName: string) {
+  public async appActiveCount(startTime: number, endTime: number, appName: string, bundleid: string) {
         const r3: any = await this.ctx.model.Devicemodel.count({
           where: {
             app_name: appName,
+            bundleid,
             lastnoncestr: { [Op.gte]: startTime, [Op.lte]: endTime },
           },
         });
