@@ -4,7 +4,7 @@
 
 ## QuickStart
 ```bash
-$ npm run i
+$ npm  i
 $ npm run clean
 $ npm run ci
 $ npm run start
