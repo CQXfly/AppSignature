@@ -4,7 +4,8 @@
 
 ## QuickStart
 ```bash
-$ npm run celan
+$ npm run i
+$ npm run clean
 $ npm run ci
 $ npm run start
 ```
