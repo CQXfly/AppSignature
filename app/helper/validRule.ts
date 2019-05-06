@@ -37,15 +37,14 @@ const createRuleUploadAppDevice = {
     bundleid : 'string',
     devUdid : 'string',
     deviceIp : 'string',
-    deviceMAC : 'string',
     deviceName : 'string',
     ispName : 'string',
     model : 'string',
     noncestr : 'int',
     osVersion : 'string',
-    platform : 'int',
     provisionName : 'string',
     version : 'string',
+    certCompany: 'string',
 };
 
 const createRuleBindToApp = {
@@ -57,6 +56,10 @@ const createRuleBindToApp = {
 
 const createRuleUserId = {
     userid : 'string',
+};
+
+const createRuleUserAccount = {
+    userAccount : 'string',
 };
 
 const createRuleProvisionName = {
@@ -86,4 +89,5 @@ export { createRuleAppName,
         createRuleProvisionName,
         createRuleUploadAppInfo,
         createRulePage,
+        createRuleUserAccount,
      };

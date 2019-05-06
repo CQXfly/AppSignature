@@ -1,6 +1,6 @@
 import { Controller } from 'egg';
 
-import cry_md5 from '../helper/crypto';
+import { cry_md5 } from '../helper/crypto';
 import Result from '../helper/result';
 import * as moment from 'moment';
 import { createRuleAppName, createRuleShowMessage, createRuleValidDay, createRuleMaxSupportDevice,
@@ -68,7 +68,7 @@ export default class AppController extends Controller {
 
         ctx.body = Result.Sucess({
             canUse,
-            isForce: r.is_froce,
+            isForce: Boolean(r.is_froce),
             showMsg: r.show_msg,
             showUrl: r.show_url,
         });
@@ -91,11 +91,15 @@ export default class AppController extends Controller {
       const registerApp = await ctx.service.app.app_is_register(appName, bundleid);
 
       let uplogs: any[];
+      let code = 200;
+      let msg = '注册成功';
       const startTime = (new Date()).getTime();
       if (registerApp === null) {
           uplogs = [];
       } else {
         uplogs = registerApp.update_logs;
+        code = 201;
+        msg = '更新成功';
       }
       uplogs.push({
               appName,
@@ -144,7 +148,7 @@ export default class AppController extends Controller {
             },
         });
 
-        ctx.body = Result.default(200, '更新成功');
+        ctx.body = Result.default(code, msg);
       } catch (error) {
 
         ctx.body = Result.ServerError();
@@ -414,9 +418,9 @@ export default class AppController extends Controller {
             offset: (index - 1) * size,
             limit: size,
         });
-        return ctx.body = Result.Sucess(r);
+        ctx.body = Result.Sucess(r, true);
       } catch (e) {
-          return Result.error(400, 'fuck');
+        ctx.body = Result.error(400, 'fuck');
       }
   }
 

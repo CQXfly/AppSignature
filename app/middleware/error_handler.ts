@@ -12,7 +12,8 @@ module.exports = () => {
             ? 'Internal Server Error' : err.message;
             ctx.body = { error };
             if (status === 422) {
-                ctx.body = Result.error(402, err.errors);
+                // err.errors
+                ctx.body = Result.error(402, '参数错误');
               }
             ctx.status = status;
         }

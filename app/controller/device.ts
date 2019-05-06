@@ -36,8 +36,8 @@ export default class DeviceController extends Controller {
     ctx.validate(createRuleUploadAppDevice, ctx.request.body);
     ctx.logger.info(`${ctx.request.body}`);
     const { appName, bundleVersion, bundleid, devUdid,
-            deviceIp, deviceMAC, deviceName, ispName, model, noncestr,
-            osVersion, platform, provisionName, version} = ctx.request.body;
+            deviceIp, deviceName, ispName, model, noncestr,
+            osVersion, provisionName, version, certCompany} = ctx.request.body;
     const t = (new Date()).getTime();
     ctx.logger.info(noncestr);
     // 查询设备是否存过
@@ -63,23 +63,21 @@ export default class DeviceController extends Controller {
         });
         if (r === null) {
           // 存入数据库
-          await ctx.model.Devicemodel.upsert({
+          const r0 = await ctx.model.Devicemodel.upsert({
               appid: appmodel.id,
               app_name: appName,
               dev_udid: devUdid,
               isp_name: ispName,
               model,
               noncestr: t,
-              device_ip: deviceIp,
-              device_mac: deviceMAC,
+              deviceip: deviceIp,
               device_name: deviceName,
               os_version: osVersion,
-              platform,
               provision_name: provisionName,
               version,
+              cert_company: certCompany,
           });
-
-          ctx.body = Result.default(200, '绑定成功');
+          ctx.body = Result.default(200, r0 ? '绑定成功' : '绑定失败');
         } else {
 
             const p1 = ctx.model.Devicemodel.update({
@@ -104,7 +102,7 @@ export default class DeviceController extends Controller {
             const r0 = r[0][0];
             console.log(r0);
             if (Number(r0.num) > appmodel.max_install_num) {
-                ctx.body = Result.error(300, 'dnmerror: currentusernum');
+                ctx.body = Result.error(300, `dnmerror: currentusernum: ${r0.num}`);
                 return;
             }
 

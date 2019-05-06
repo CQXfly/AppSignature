@@ -1,6 +1,6 @@
 import { Controller } from 'egg';
 import Result from '../helper/result';
-import { createRuleBindToApp, createRuleUserId } from '../helper/validRule';
+import { createRuleBindToApp, createRuleUserAccount } from '../helper/validRule';
 
 // 1、上传APP信息，获取APP是否可以打开、打开显示信息、是否必须点击（用户前端显示，必须点击只有一个确定按钮，非必须可以点击取消）
 // {
@@ -54,13 +54,21 @@ export default class UserController extends Controller {
 
   public async getAppListByUser() {
     const { ctx } = this;
-    ctx.validate(createRuleUserId, ctx.query);
-    const { userid } = ctx.query;
+    ctx.validate(createRuleUserAccount, ctx.query);
+    const { userAccount } = ctx.query;
 
     try {
+      const r0 = await ctx.model.Usermodel.findOne({
+        where: {
+          userAccount,
+        },
+      });
+      if (r0 === 0) {
+        ctx.body = Result.default(404, '无该用户');
+      }
       const r = await ctx.model.Appmodel.findAll({
         where: {
-          userid,
+          userid: r0.userid,
         },
       });
       ctx.body = Result.Sucess(r);

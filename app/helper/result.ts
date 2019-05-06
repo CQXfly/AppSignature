@@ -1,3 +1,4 @@
+import { cry_aes } from './crypto';
 
 export default class Result {
     code: number;
@@ -27,14 +28,18 @@ export default class Result {
         return e;
     }
 
-    static Sucess(data: object | null): Result {
+    static Sucess(data: object | null, cry: boolean = false): Result {
         if (data === null) {
             return Result.error(204, '无数据');
         }
+
         const r = new Result();
         r.code = 200;
         r.message = 'success';
-        r.data = data;
+        r.data = {
+            cry,
+            result: cry ? cry_aes(JSON.stringify(data)) : data,
+        };
         return r;
     }
 }
