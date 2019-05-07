@@ -1,6 +1,5 @@
 
 import * as crypto from 'crypto';
-import { json } from 'body-parser';
 const secrect = 'abcdabcdabcdabcd';
 const iv = '1012132405963708';
 function cry_md5(src: string): string {
