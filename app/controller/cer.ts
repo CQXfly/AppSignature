@@ -1,7 +1,7 @@
 import { Controller } from 'egg';
 
 import Result from '../helper/result';
-import { createRuleProvisionName } from '../helper/validRule';
+import { createRuleProvisionUdid } from '../helper/validRule';
 import moment = require('moment');
 
 export default class DeviceController extends Controller {
@@ -49,11 +49,16 @@ export default class DeviceController extends Controller {
 
     public async applist() {
         const { ctx } = this;
-        ctx.validate(createRuleProvisionName, ctx.query);
-        const { provisionName } = ctx.query;
+        ctx.validate(createRuleProvisionUdid, ctx.query);
+        const { certUdid } = ctx.query;
+        const id = await ctx.service.cert.certProvisionid(certUdid);
+        if (id === null) {
+            ctx.body = Result.error(404, '没有该证书');
+            return;
+        }
         const r = await ctx.model.Appmodel.findAll({
             where: {
-                provision_name: provisionName,
+                provision_id: id.id,
             },
         });
         ctx.body = Result.Sucess(r);

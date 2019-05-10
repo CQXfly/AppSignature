@@ -66,8 +66,9 @@ export default function App(app: Application) {
         },
         max_install_num: {
             type: INTEGER,
+            defaultValue: 200,
         },
-        current_user_num: {
+        current_device_num: {
             type: INTEGER,
         },
         user_contact: {

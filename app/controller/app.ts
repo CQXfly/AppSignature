@@ -1,10 +1,10 @@
 import { Controller } from 'egg';
-
+import { Op } from 'sequelize';
 import { cry_md5 } from '../helper/crypto';
 import Result from '../helper/result';
 import * as moment from 'moment';
 import { createRuleAppName, createRuleShowMessage, createRuleValidDay, createRuleMaxSupportDevice,
-     createRuleAppStatus, createRuleUploadAppInfo, createRulePage } from '../helper/validRule';
+     createRuleAppStatus, createRuleUploadAppInfo, createRulePage, createRuleAppNameBundleId } from '../helper/validRule';
 import { Promise } from 'bluebird';
 
 // 1、查询APP是否注册，是否到期，并返回服务器存储的签名所使用的证书名字、公司名字、用户名
@@ -86,7 +86,7 @@ export default class AppController extends Controller {
 
       const { appName, bundleid, bundleVersion,
               certUdid, cerName, provisionName,
-              expirationDate, provisionType} = ctx.request.body;
+              expirationDate, provisionType, maxInstallNum} = ctx.request.body;
       // app是否注册
       const registerApp = await ctx.service.app.app_is_register(appName, bundleid);
 
@@ -121,6 +121,7 @@ export default class AppController extends Controller {
             start_time: startTime,
             end_time: startTime + 30 * 24 * 60 * 60 * 1000,
             update_logs: uplogs,
+            maxInstallNum,
           });
 
         const p2 = ctx.model.Certification.upsert({
@@ -158,42 +159,54 @@ export default class AppController extends Controller {
   public async findAppStatus() {
       const { ctx } = this;
       ctx.logger.info('register');
-      ctx.validate(createRuleAppName, ctx.query);
+      ctx.validate(createRuleAppNameBundleId, ctx.query);
       const { appName, bundleid } = ctx.query;
       const registerApp = await ctx.service.app.app_is_register(appName, bundleid);
       if (registerApp === null) {
           ctx.body = Result.error(400, 'app未注册，请联系(3469019435)');
+          return;
       } else {
         // 是否到期
         const endTime = registerApp.end_time;
         const curr = Date.parse(moment(new Date()).format('YYYY-MM-DD hh:mm'));
 
         // 签名所使用的信息
-        const r = await ctx.model.Certification.findOne({
-            attributes: [ 'provision_name', 'cert_name' ],
+        const p1 = ctx.model.Certification.findOne({
+            attributes: [ 'provision_name', 'cert_name', ],
             where: {
                 id: registerApp.provision_id,
             },
         });
+
+        const p2 = ctx.service.device.deviceCount(registerApp.id);
+        try {
+        const rl = await Promise.all([ p1, p2 ]);
+        const r = rl[0];
+        const number = rl[1];
+
         if (registerApp.userid !== null) {
             // 未绑定
             const r2: any = await ctx.model.Usermodel.findOne({
                 where: {
-                    userAccount: registerApp.userid,
+                    id: registerApp.userid,
                 },
             });
 
-            ctx.body = Result.Sucess(Object.assign(r === null ? {} : r, {
+            ctx.body = Result.Sucess(Object.assign(r === null ? {} : r.dataValues, {
                 userName: r2.userAccount,
                 isValid: endTime < curr,
            }));
             return;
         }
-        ctx.body = Result.Sucess(Object.assign(r === null ? {} : r, {
+        ctx.body = Result.Sucess(Object.assign(r === null ? {} : r.dataValues, {
             appName: registerApp.app_name,
             isValid: endTime < curr,
+            deviceNumber: number,
        }));
-      }
+        } catch (e) {
+        this.logger.error(e);
+        }
+    }
   }
 
   public async registerApp() {
@@ -261,16 +274,26 @@ export default class AppController extends Controller {
     const { ctx } = this;
     ctx.logger.info(ctx.query);
     ctx.validate(createRuleAppName, ctx.query);
-    const { appName, bundleid } = ctx.query;
+    const { appName } = ctx.query;
     // if (appName == null) {
     //     ctx.body = Result.error(400, '缺省参数 appName');
     //
     try {
-        const r = await ctx.model.Appmodel.findOne({
+        const r = await ctx.model.Appmodel.findAll({
             where: {
-                app_name: appName,
-                bundleid,
+                app_name: { [Op.like]: `%${appName}%` },
             },
+        });
+        // TODO:
+        // 查出每个的current_install_num
+        const ids = r.map(item => {
+            return item.id;
+        });
+        const nums = await ctx.service.device.deviceCounts(ids);
+        r.forEach((item, index) => {
+            Object.assign(item, {
+                current_device_num: nums[index],
+            });
         });
         ctx.body = Result.Sucess(r);
     } catch (error) {
@@ -281,7 +304,7 @@ export default class AppController extends Controller {
   public async delete() {
     const { ctx } = this;
     ctx.logger.info(ctx.query);
-    ctx.validate(createRuleAppName, ctx.query);
+    ctx.validate(createRuleAppNameBundleId, ctx.query);
     const { appName, bundleid } = ctx.query;
     try {
         const r = await ctx.model.Appmodel.destroy({
@@ -290,7 +313,7 @@ export default class AppController extends Controller {
                 bundleid,
             },
         });
-        ctx.body = Result.default(200, r === 1 ? '删除成功' : '删除失败');
+        ctx.body = Result.default(r === 1 ? 200 : 201, r === 1 ? '删除成功' : '删除失败');
     } catch (e) {
         ctx.body = Result.ServerError();
     }
@@ -299,7 +322,7 @@ export default class AppController extends Controller {
   public async updateShowMessage() {
     const { ctx } = this;
     ctx.logger.info(ctx.request.body);
-    ctx.validate(createRuleAppName, ctx.request.body);
+    ctx.validate(createRuleAppNameBundleId, ctx.request.body);
     ctx.validate(createRuleShowMessage, ctx.request.body);
     const { appName, showMsg, showUrl, forceEnable, bundleid } = ctx.request.body;
     try {
@@ -333,7 +356,7 @@ export default class AppController extends Controller {
   public async updateValidDay() {
     const { ctx } = this;
     ctx.logger.info(ctx.request.body);
-    ctx.validate(createRuleAppName, ctx.request.body);
+    ctx.validate(createRuleAppNameBundleId, ctx.request.body);
     ctx.validate(createRuleValidDay, ctx.request.body);
     const { appName, validDay, bundleid } = ctx.request.body;
     try {
@@ -371,7 +394,7 @@ export default class AppController extends Controller {
   public async updateMaxSupportDevice() {
     const { ctx } = this;
     ctx.logger.info(ctx.request.body);
-    ctx.validate(createRuleAppName, ctx.request.body);
+    ctx.validate(createRuleAppNameBundleId, ctx.request.body);
     ctx.validate(createRuleMaxSupportDevice, ctx.request.body);
     const { appName, maxInstallNum, bundleid } = ctx.request.body;
     try {
@@ -385,6 +408,42 @@ export default class AppController extends Controller {
             ctx.body = Result.error(404, '没有查到该app');
             return;
         }
+        const origin = r.max_install_num;
+        // 查出 deviceCount limit数量
+
+        const f0 = await ctx.model.Devicemodel.findAll({
+            offset: Math.min(origin, maxInstallNum) - 1,
+            limit: 1,
+            order: [
+                [ 'id', 'Asc' ],
+            ],
+        });
+        // 5000 -> 2000； 2000 -> 5000
+        if (f0.length > 0) {
+            const f0id = f0[0].id;
+            await ctx.model.Devicemodel.update({
+                forbidden: origin > maxInstallNum,
+            }, {
+                where: {
+                    appid: r.id,
+                    id: {
+                        [Op.gte]: f0id,
+                    },
+                },
+            });
+            // 对小于最大数的进行更新
+            await ctx.model.Devicemodel.update({
+                forbidden: false,
+            }, {
+                where: {
+                    appid: r.id,
+                    id: {
+                        [Op.lte]: f0id,
+                    },
+                },
+            });
+        }
+
         await ctx.model.Appmodel.update({
             max_install_num: maxInstallNum,
         }, {
@@ -393,6 +452,7 @@ export default class AppController extends Controller {
                 bundleid,
             },
         });
+        // 根据最大数去修改目前已存的设备数可用量
 
         ctx.body = Result.default();
     } catch (err) {
@@ -426,7 +486,7 @@ export default class AppController extends Controller {
 
   public async dayGrowth() {
       const { ctx } = this;
-      ctx.validate(createRuleAppName, ctx.query);
+      ctx.validate(createRuleAppNameBundleId, ctx.query);
       const { appName, bundleid } = ctx.query;
       const startTime = moment().startOf('D').valueOf();
       const endTime = moment().endOf('D').valueOf();
@@ -453,7 +513,7 @@ export default class AppController extends Controller {
 
   public async appMonthActive() {
     const { ctx } = this;
-    ctx.validate(createRuleAppName, ctx.query);
+    ctx.validate(createRuleAppNameBundleId, ctx.query);
     const { appName, bundleid } = ctx.query;
     const startTime = moment().startOf('M').valueOf();
     const endTime = moment().endOf('M').valueOf();

@@ -65,11 +65,21 @@ export default class UserController extends Controller {
       });
       if (r0 === 0) {
         ctx.body = Result.default(404, '无该用户');
+        return;
       }
       const r = await ctx.model.Appmodel.findAll({
         where: {
-          userid: r0.userid,
+          userid: r0.id,
         },
+      });
+      const ids = r.map(item => {
+        return item.id;
+      });
+      const nums = await ctx.service.device.deviceCounts(ids);
+      r.forEach((item, index) => {
+        Object.assign(item, {
+            current_device_num: nums[index],
+        });
       });
       ctx.body = Result.Sucess(r);
     } catch (error) {
@@ -101,7 +111,8 @@ export default class UserController extends Controller {
           userAccount,
         },
       });
-      if (r === null) {
+      if (r === null) { // 未注册
+
         await ctx.service.user.register(userAccount, email);
         const r0: any = await ctx.model.Usermodel.findOne({
           where: {
@@ -111,7 +122,20 @@ export default class UserController extends Controller {
         userid = r0.id;
       } else {
         userid = r.id;
+
+        const xx = await ctx.model.Appmodel.findOne({
+          where: {
+            userid,
+            app_name: appName,
+            bundleid,
+          },
+        });
+        if (xx) {
+          ctx.body = Result.error(400, '该APP已注册');
+          return;
+        }
       }
+
       const x = await ctx.model.Appmodel.update({
         userid,
       }, {
@@ -120,7 +144,7 @@ export default class UserController extends Controller {
           bundleid,
         },
       });
-      ctx.body = Result.default(200, x[0] === 0 ? '绑定失败 请查看是否有该app' : '绑定成功');
+      ctx.body = Result.default(x[0] === 0 ? 200 : 201, x[0] === 0 ? '绑定失败 请查看是否有该app' : '绑定成功');
     } catch (e) {
       ctx.body = Result.ServerError();
     }

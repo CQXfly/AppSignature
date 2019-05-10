@@ -2,7 +2,7 @@ import { Application } from 'egg';
 import BaseModel from '../model';
 
 export default function Device(app: Application) {
-    const { INTEGER, STRING, DATE, BIGINT } = app.Sequelize;
+    const { INTEGER, STRING, DATE, BIGINT, BOOLEAN } = app.Sequelize;
     const schema = BaseModel(app, 'device', {
         appid: {
             type: INTEGER,
@@ -48,6 +48,10 @@ export default function Device(app: Application) {
         },
         version: {
             type: STRING,
+        },
+        forbidden: {
+            type: BOOLEAN,
+            defaultValue: true,
         },
         deleted_at: DATE, // 软删除时间
         created_at: DATE, // 创建时间

@@ -1,5 +1,6 @@
 import { Service } from 'egg';
 import { Op } from 'sequelize';
+import { Promise } from 'bluebird';
 /**
  * Test Service
  */
@@ -12,6 +13,25 @@ export default class Device extends Service {
   public async sayHi(name: string) {
     return `hi, ${name}`;
   }
+
+  public async deviceCount(appid: number) {
+     return await this.ctx.model.Devicemodel.count({
+        where: {
+          appid,
+        },
+      });
+  }
+
+  public async deviceCounts(appids: number[]) {
+    const rs = appids.map(appid => {
+      return this.ctx.model.Devicemodel.count({
+        where: {
+          appid,
+        },
+      });
+    });
+    return await Promise.all(rs);
+ }
 
   public async activeCount(startTime: number, endTime: number, provisionName?: string) {
     if (provisionName === undefined) {

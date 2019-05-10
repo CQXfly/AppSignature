@@ -1,5 +1,9 @@
 const createRuleAppName = {
     appName: 'string',
+};
+
+const createRuleAppNameBundleId = {
+    appName: 'string',
     bundleid: 'string',
 };
 
@@ -66,6 +70,10 @@ const createRuleProvisionName = {
     provisionName : 'string',
 };
 
+const createRuleProvisionUdid = {
+    certUdid : 'string',
+};
+
 const createRuleUploadAppInfo = {
     appName: 'string',
     bundleid: 'string',
@@ -90,4 +98,6 @@ export { createRuleAppName,
         createRuleUploadAppInfo,
         createRulePage,
         createRuleUserAccount,
+        createRuleAppNameBundleId,
+        createRuleProvisionUdid,
      };

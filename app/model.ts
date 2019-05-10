@@ -13,7 +13,6 @@ export default function BaseModel(
     const modelSchema = app.model.define(table, {
         id: {
             type: INTEGER,
-            unique: true,
             primaryKey: true,
             allowNull: false,
             autoIncrement: true,

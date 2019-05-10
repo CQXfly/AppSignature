@@ -59,6 +59,7 @@ export default class DeviceController extends Controller {
         const r: any = await ctx.model.Devicemodel.findOne({
           where: {
             dev_udid: devUdid,
+            appid: appmodel.id,
           },
         });
         if (r === null) {
@@ -159,4 +160,8 @@ export default class DeviceController extends Controller {
             ctx.body = Result.ServerError();
         }
       }
+
+    public async DeviceEnable() {
+      return 1;
+    }
 }
