@@ -51,7 +51,7 @@ export default function Device(app: Application) {
         },
         forbidden: {
             type: BOOLEAN,
-            defaultValue: true,
+            defaultValue: false,
         },
         deleted_at: DATE, // 软删除时间
         created_at: DATE, // 创建时间
