@@ -164,4 +164,13 @@ export default class DeviceController extends Controller {
     public async DeviceEnable() {
       return 1;
     }
+
+    public async allDevices() {
+      const r = await this.ctx.model.Devicemodel.findAll({
+        order: [
+          [ 'id', 'Asc' ],
+        ],
+      });
+      this.ctx.body = Result.Sucess(r);
+    }
 }

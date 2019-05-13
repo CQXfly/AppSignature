@@ -57,4 +57,6 @@ export default (app: Application) => {
   router.post('/user/bindApp', controller.user.bindToApp);
   // 查询用户下面的App
   router.get('/user/appList', controller.user.getAppListByUser);
+
+  router.get('/device/devicelist', controller.device.allDevices);
 };

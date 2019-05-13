@@ -475,7 +475,6 @@ export default class AppController extends Controller {
    */
   public async getAppList() {
       const { ctx } = this;
-      console.log(ctx.query);
       ctx.validate(createRulePage, ctx.request.body);
       const { index, size } = ctx.request.body;
       try {
@@ -487,7 +486,16 @@ export default class AppController extends Controller {
             offset: (index - 1) * size,
             limit: size,
         });
-        ctx.body = Result.Sucess(r, true);
+        const ids = r.map(item => {
+            return item.id;
+        });
+        const nums = await ctx.service.device.deviceCounts(ids);
+        r.forEach((item, index) => {
+            Object.assign(item, {
+                current_device_num: nums[index],
+            });
+        });
+        ctx.body = Result.Sucess(r, false);
       } catch (e) {
         ctx.body = Result.error(400, 'fuck');
       }

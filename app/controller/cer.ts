@@ -61,6 +61,6 @@ export default class DeviceController extends Controller {
                 provision_id: id.id,
             },
         });
-        ctx.body = Result.Sucess(r);
+        ctx.body = Result.Sucess(r, false);
     }
 }
