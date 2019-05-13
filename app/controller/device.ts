@@ -95,9 +95,9 @@ export default class DeviceController extends Controller {
             });
             await Promise.all([ p1, p2 ]);
 
-            const r: any[] = await ctx.app.model.query('SELECT app_name , COUNT(*) as num FROM devices  WHERE app_name = :app_name GROUP BY app_name;', {
+            const r: any[] = await ctx.app.model.query('SELECT appid , COUNT(*) as num FROM devices  WHERE appid = :appid GROUP BY appid;', {
               replacements: {
-                app_name: appName,
+                appid: appmodel.id,
               },
             });
             const r0 = r[0][0];
