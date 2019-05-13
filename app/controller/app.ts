@@ -418,9 +418,9 @@ export default class AppController extends Controller {
         const current_device_num = await ctx.service.device.deviceCount(r.id);
         origin = Math.max(origin, current_device_num);
         // 查出 deviceCount limit数量
-
+        const offset = (Math.min(origin, maxInstallNum) - 1) < 1 ? 0 : (Math.min(origin, maxInstallNum) - 1);
         const f0 = await ctx.model.Devicemodel.findAll({
-            offset: Math.min(origin, maxInstallNum) - 1,
+            offset,
             limit: 1,
             order: [
                 [ 'id', 'Asc' ],
@@ -464,6 +464,7 @@ export default class AppController extends Controller {
 
         ctx.body = Result.default();
     } catch (err) {
+        this.logger.error(err);
         ctx.body = Result.error(400, '更新失败');
     }
   }
