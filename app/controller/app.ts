@@ -195,6 +195,8 @@ export default class AppController extends Controller {
             ctx.body = Result.Sucess(Object.assign(r === null ? {} : r.dataValues, {
                 userName: r2.userAccount,
                 isValid: endTime < curr,
+                start_time: registerApp.start_time,
+                end_time: registerApp.end_time,
            }));
             return;
         }
@@ -202,6 +204,8 @@ export default class AppController extends Controller {
             appName: registerApp.app_name,
             isValid: endTime < curr,
             deviceNumber: number,
+            start_time: registerApp.start_time,
+            end_time: registerApp.end_time,
        }));
         } catch (e) {
         this.logger.error(e);
@@ -373,7 +377,7 @@ export default class AppController extends Controller {
         }
 
         const endTime = Number(r.start_time) + (validDay * 24 * 60 * 60 * 1000);
-        console.log(endTime);
+
         await ctx.model.Appmodel.update({
             valid_day: validDay,
             end_time: endTime,
@@ -384,7 +388,9 @@ export default class AppController extends Controller {
             },
         });
 
-        ctx.body = Result.default();
+        ctx.body = Result.Sucess({
+            endTime,
+        });
     } catch (err) {
         console.log(err);
         ctx.body = Result.error(400, '更新失败');
@@ -408,7 +414,9 @@ export default class AppController extends Controller {
             ctx.body = Result.error(404, '没有查到该app');
             return;
         }
-        const origin = r.max_install_num;
+        let origin = r.max_install_num;
+        const current_device_num = await ctx.service.device.deviceCount(r.id);
+        origin = Math.max(origin, current_device_num);
         // 查出 deviceCount limit数量
 
         const f0 = await ctx.model.Devicemodel.findAll({
