@@ -81,7 +81,19 @@ export default class DeviceController extends Controller {
           ctx.body = Result.default(200, r0 ? '绑定成功' : '绑定失败');
         } else {
 
-            const p1 = ctx.model.Devicemodel.update({
+           const r: any[] = await ctx.app.model.query('SELECT appid , COUNT(*) as num FROM devices  WHERE appid = :appid GROUP BY appid;', {
+              replacements: {
+                appid: appmodel.id,
+              },
+            });
+           const r0 = r[0][0];
+           console.log(r0);
+           if (Number(r0.num) > appmodel.max_install_num) {
+                ctx.body = Result.error(300, `dnmerror: currentusernum: ${r0.num}`);
+                return;
+           }
+
+           const p1 = ctx.model.Devicemodel.update({
               appid: appmodel.id,
               app_name: appName,
             }, {
@@ -90,24 +102,12 @@ export default class DeviceController extends Controller {
                 },
             });
 
-            const p2 = ctx.model.Certification.upsert({
+           const p2 = ctx.model.Certification.upsert({
               provision_name: provisionName,
             });
-            await Promise.all([ p1, p2 ]);
+           await Promise.all([ p1, p2 ]);
 
-            const r: any[] = await ctx.app.model.query('SELECT appid , COUNT(*) as num FROM devices  WHERE appid = :appid GROUP BY appid;', {
-              replacements: {
-                appid: appmodel.id,
-              },
-            });
-            const r0 = r[0][0];
-            console.log(r0);
-            if (Number(r0.num) > appmodel.max_install_num) {
-                ctx.body = Result.error(300, `dnmerror: currentusernum: ${r0.num}`);
-                return;
-            }
-
-            ctx.body = Result.default(200, '上传成功');
+           ctx.body = Result.default(200, '上传成功');
         }
     } catch (err) {
       ctx.body = Result.error(400, 'error');
