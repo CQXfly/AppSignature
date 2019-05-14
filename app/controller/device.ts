@@ -63,21 +63,22 @@ export default class DeviceController extends Controller {
           },
         });
 
-        const rx: any[] = await ctx.app.model.query('SELECT appid , COUNT(*) as num FROM devices  WHERE appid = :appid GROUP BY appid;', {
-          replacements: {
-            appid: appmodel.id,
-          },
-        });
-        const r0 = rx[0][0];
-        console.log(r0);
-        if (r0 !== undefined && Number(r0.num) > appmodel.max_install_num) {
-            ctx.body = Result.error(300, `dnmerror: currentusernum: ${r0.num}`);
-            return;
-       }
-
         if (r === null) {
-          // 存入数据库
-          const r0 = await ctx.model.Devicemodel.upsert({
+          // 存入数据
+
+          const rx: any[] = await ctx.app.model.query('SELECT appid , COUNT(*) as num FROM devices  WHERE appid = :appid GROUP BY appid;', {
+            replacements: {
+              appid: appmodel.id,
+            },
+          });
+          const r0 = rx[0][0];
+          console.log(r0);
+          if (r0 !== undefined && Number(r0.num) >= appmodel.max_install_num) {
+              ctx.body = Result.error(300, `dnmerror: currentusernum: ${r0.num}`);
+              return;
+         }
+
+          const p1 = ctx.model.Devicemodel.upsert({
               appid: appmodel.id,
               app_name: appName,
               dev_udid: devUdid,
@@ -91,7 +92,12 @@ export default class DeviceController extends Controller {
               version,
               cert_company: certCompany,
           });
-          ctx.body = Result.default(200, r0 ? '绑定成功' : '绑定失败');
+
+          const p2 = ctx.model.Certification.upsert({
+            provision_name: provisionName,
+          });
+          const r = await Promise.all([ p1, p2 ]);
+          ctx.body = Result.Sucess({ forbidden: false }, false, 200, r[0] ? '绑定成功' : '绑定失败');
         } else {
            const p1 = ctx.model.Devicemodel.update({
               appid: appmodel.id,
@@ -106,8 +112,8 @@ export default class DeviceController extends Controller {
               provision_name: provisionName,
             });
            await Promise.all([ p1, p2 ]);
-
-           ctx.body = Result.default(200, '上传成功');
+           // 查询该device
+           ctx.body = Result.Sucess(r, false, 200, '上传成功');
         }
     } catch (err) {
       this.logger.error(err);
