@@ -70,7 +70,7 @@ export default class DeviceController extends Controller {
         });
         const r0 = rx[0][0];
         console.log(r0);
-        if (Number(r0.num) > appmodel.max_install_num) {
+        if (r0 !== undefined && Number(r0.num) > appmodel.max_install_num) {
             ctx.body = Result.error(300, `dnmerror: currentusernum: ${r0.num}`);
             return;
        }
@@ -110,6 +110,7 @@ export default class DeviceController extends Controller {
            ctx.body = Result.default(200, '上传成功');
         }
     } catch (err) {
+      this.logger.error(err);
       ctx.body = Result.error(400, 'error');
     }
 
