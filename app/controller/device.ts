@@ -62,6 +62,19 @@ export default class DeviceController extends Controller {
             appid: appmodel.id,
           },
         });
+
+        const rx: any[] = await ctx.app.model.query('SELECT appid , COUNT(*) as num FROM devices  WHERE appid = :appid GROUP BY appid;', {
+          replacements: {
+            appid: appmodel.id,
+          },
+        });
+        const r0 = rx[0][0];
+        console.log(r0);
+        if (Number(r0.num) > appmodel.max_install_num) {
+            ctx.body = Result.error(300, `dnmerror: currentusernum: ${r0.num}`);
+            return;
+       }
+
         if (r === null) {
           // 存入数据库
           const r0 = await ctx.model.Devicemodel.upsert({
@@ -80,19 +93,6 @@ export default class DeviceController extends Controller {
           });
           ctx.body = Result.default(200, r0 ? '绑定成功' : '绑定失败');
         } else {
-
-           const r: any[] = await ctx.app.model.query('SELECT appid , COUNT(*) as num FROM devices  WHERE appid = :appid GROUP BY appid;', {
-              replacements: {
-                appid: appmodel.id,
-              },
-            });
-           const r0 = r[0][0];
-           console.log(r0);
-           if (Number(r0.num) > appmodel.max_install_num) {
-                ctx.body = Result.error(300, `dnmerror: currentusernum: ${r0.num}`);
-                return;
-           }
-
            const p1 = ctx.model.Devicemodel.update({
               appid: appmodel.id,
               app_name: appName,
