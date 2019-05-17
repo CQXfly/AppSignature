@@ -397,6 +397,36 @@ export default class AppController extends Controller {
     }
   }
 
+  public async getDeviceList() {
+    const { ctx } = this;
+    ctx.validate(createRuleAppNameBundleId, ctx.query);
+    const { appName, bundleid } = ctx.query;
+
+    try {
+        const appmodel: any = await ctx.model.Appmodel.findOne({
+            where: {
+                app_name: appName,
+                bundleid,
+            },
+        });
+
+        if (appmodel === null) {
+            ctx.body = Result.error(400, '无该app');
+            return;
+        }
+
+        const res = await ctx.model.Devicemodel.findAll({
+            where: {
+                appid: appmodel.id,
+            },
+        });
+        ctx.body = Result.Sucess(res);
+    } catch (error) {
+        ctx.logger.error(error);
+        ctx.body = Result.error(400, 'error');
+    }
+  }
+
   public async updateMaxSupportDevice() {
     const { ctx } = this;
     ctx.logger.info(ctx.request.body);

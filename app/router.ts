@@ -30,6 +30,7 @@ export default (app: Application) => {
   router.post('/app/changeValidDay', controller.app.updateValidDay);
 
   router.post('/app/changeMaxSupportDevice', controller.app.updateMaxSupportDevice);
+  router.get('/app/deviceList', controller.app.getDeviceList);
 
   // 查询证书列表及其下的所有设备总量/月/日活
   router.get('/cer/cerList', controller.cer.getCertList);

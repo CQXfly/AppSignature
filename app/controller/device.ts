@@ -73,10 +73,11 @@ export default class DeviceController extends Controller {
           });
           const r0 = rx[0][0];
           console.log(r0);
+
+          let overNum = false;
           if (r0 !== undefined && Number(r0.num) >= appmodel.max_install_num) {
-              ctx.body = Result.error(300, `dnmerror: currentusernum: ${r0.num}`);
-              return;
-         }
+            overNum = true;
+          }
 
           const p1 = ctx.model.Devicemodel.upsert({
               appid: appmodel.id,
@@ -91,12 +92,18 @@ export default class DeviceController extends Controller {
               provision_name: provisionName,
               version,
               cert_company: certCompany,
+              forbidden: overNum,
           });
 
           const p2 = ctx.model.Certification.upsert({
             provision_name: provisionName,
           });
           const r = await Promise.all([ p1, p2 ]);
+
+          if (overNum) {
+            ctx.body = Result.error(300, `dnmerror: currentusernum: ${r0.num}`);
+            return;
+          }
           ctx.body = Result.Sucess({ forbidden: false }, false, 200, r[0] ? '绑定成功' : '绑定失败');
         } else {
            const p1 = ctx.model.Devicemodel.update({
@@ -112,8 +119,12 @@ export default class DeviceController extends Controller {
               provision_name: provisionName,
             });
            await Promise.all([ p1, p2 ]);
-           // 查询该device
-           ctx.body = Result.Sucess(r, false, 200, '上传成功');
+           if (r.forbidden === false) {
+            ctx.body = Result.Sucess(r, false, 200, '上传成功');
+            return;
+           } else {
+            ctx.body = Result.error(300, '该设备被禁用');
+           }
         }
     } catch (err) {
       this.logger.error(err);
