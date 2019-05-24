@@ -277,8 +277,13 @@ export default class AppController extends Controller {
   public async search() {
     const { ctx } = this;
     ctx.logger.info(ctx.query);
-    ctx.validate(createRuleAppName, ctx.query);
+    ctx.validate(Object.assign(createRuleAppName, createRulePage), ctx.query);
     const { appName } = ctx.query;
+    const { index, size } = ctx.query;
+    if (Number(index) < 1 || Number(size) < 0) {
+      ctx.body = Result.error(400, 'index or size error. check it');
+      return;
+    }
     // if (appName == null) {
     //     ctx.body = Result.error(400, '缺省参数 appName');
     //
@@ -287,6 +292,12 @@ export default class AppController extends Controller {
             where: {
                 app_name: { [Op.like]: `%${appName}%` },
             },
+
+            order: [
+                [ 'id', 'ASC' ],
+            ],
+            offset: (Number(index) - 1) * Number(size),
+            limit: Number(size),
         });
         // TODO:
         // 查出每个的current_install_num
