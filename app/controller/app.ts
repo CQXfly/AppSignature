@@ -277,13 +277,30 @@ export default class AppController extends Controller {
   public async search() {
     const { ctx } = this;
     ctx.logger.info(ctx.query);
-    ctx.validate(createRuleAppName, ctx.query);
+    ctx.validate(Object.assign(createRuleAppName, createRulePage), ctx.query);
     const { appName } = ctx.query;
+    const { index, size } = ctx.query;
+    if (Number(index) < 1 || Number(size) < 0) {
+      ctx.body = Result.error(400, 'index or size error. check it');
+      return;
+    }
     // if (appName == null) {
     //     ctx.body = Result.error(400, '缺省参数 appName');
     //
     try {
         const r = await ctx.model.Appmodel.findAll({
+            where: {
+                app_name: { [Op.like]: `%${appName}%` },
+            },
+
+            order: [
+                [ 'id', 'ASC' ],
+            ],
+            offset: (Number(index) - 1) * Number(size),
+            limit: Number(size),
+        });
+
+        const all_count = await ctx.model.Appmodel.count({
             where: {
                 app_name: { [Op.like]: `%${appName}%` },
             },
@@ -299,7 +316,7 @@ export default class AppController extends Controller {
                 current_device_num: nums[index],
             });
         });
-        ctx.body = Result.Sucess(r);
+        ctx.body = Result.SucessCount(r, all_count);
     } catch (error) {
         ctx.body = Result.ServerError();
     }
@@ -399,15 +416,24 @@ export default class AppController extends Controller {
 
   public async getDeviceList() {
     const { ctx } = this;
-    ctx.validate(createRuleAppNameBundleId, ctx.query);
-    const { appName, bundleid } = ctx.query;
-
+    ctx.validate(Object.assign(createRuleAppNameBundleId, createRulePage), ctx.query);
+    const { appName, bundleid, index, size } = ctx.query;
+    if (Number(index) < 1 || Number(size) < 0) {
+        ctx.body = Result.error(400, 'index or size error. check it');
+        return;
+      }
     try {
         const appmodel: any = await ctx.model.Appmodel.findOne({
             where: {
                 app_name: appName,
                 bundleid,
             },
+            order: [
+                [ 'id', 'ASC' ],
+            ],
+
+            offset: (Number(index) - 1) * Number(size),
+            limit: Number(size),
         });
 
         if (appmodel === null) {
@@ -505,17 +531,24 @@ export default class AppController extends Controller {
    */
   public async getAppList() {
       const { ctx } = this;
-      ctx.validate(createRulePage, ctx.request.body);
-      const { index, size } = ctx.request.body;
+      ctx.validate(createRulePage, ctx.query);
+      const { index, size } = ctx.query;
+      if (Number(index) < 1 || Number(size) < 0) {
+        ctx.body = Result.error(400, 'index or size error. check it');
+        return;
+      }
       try {
         const r = await ctx.model.Appmodel.findAll({
             order: [
                 [ 'max_install_num', 'DESC' ],
                 [ 'end_time', 'DESC' ],
             ],
-            offset: (index - 1) * size,
-            limit: size,
+            offset: (Number(index) - 1) * Number(size),
+            limit: Number(size),
         });
+
+        const all_count = await ctx.model.Appmodel.count();
+
         const ids = r.map(item => {
             return item.id;
         });
@@ -525,7 +558,7 @@ export default class AppController extends Controller {
                 current_device_num: nums[index],
             });
         });
-        ctx.body = Result.Sucess(r, false);
+        ctx.body = Result.SucessCount(r, all_count, true);
       } catch (e) {
         ctx.body = Result.error(400, 'fuck');
       }

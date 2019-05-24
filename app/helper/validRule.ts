@@ -22,8 +22,8 @@ const createRuleMaxSupportDevice = {
 };
 
 const createRulePage = {
-    index: 'int',
-    size: 'int',
+    index: 'string',
+    size: 'string',
 };
 
 const createRuleCertName = {
