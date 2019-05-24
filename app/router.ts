@@ -10,6 +10,8 @@ export default (app: Application) => {
   app.model.Devicemodel.sync({ alter: true });
   app.logger.info('test');
 
+  const auth = app.middleware.aesValid({});
+
   router.get('/app', controller.app.index);
 
   router.post('/app', controller.app.index);
@@ -17,6 +19,8 @@ export default (app: Application) => {
   router.post('/app/updateAppInfo', controller.app.updateAppInfo);
   // 查询APP是否注册，是否到期，并返回服务器存储的签名所使用的证书名字、公司名字、用户名
   router.get('/app/signStatus', controller.app.findAppStatus);
+
+  router.get('/app/gameover', auth, controller.app.findAppStatus);
 
   // APP列表、并且能根据到期时间、最大用户量等进行排序 /分页返回
   router.get('/app/applist', controller.app.getAppList);

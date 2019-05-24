@@ -1,6 +1,6 @@
 import { Controller } from 'egg';
 import Result from '../helper/result';
-import { createRuleBindToApp, createRuleUserAccount } from '../helper/validRule';
+import { createRuleBindToApp, createRuleUserAccount, createRulePage } from '../helper/validRule';
 
 // 1、上传APP信息，获取APP是否可以打开、打开显示信息、是否必须点击（用户前端显示，必须点击只有一个确定按钮，非必须可以点击取消）
 // {
@@ -54,9 +54,12 @@ export default class UserController extends Controller {
 
   public async getAppListByUser() {
     const { ctx } = this;
-    ctx.validate(createRuleUserAccount, ctx.query);
-    const { userAccount } = ctx.query;
-
+    ctx.validate(Object.assign(createRuleUserAccount, createRulePage), ctx.query);
+    const { userAccount, index, size } = ctx.query;
+    if (Number(index) < 1 || Number(size) < 0) {
+      ctx.body = Result.error(400, 'index or size error. check it');
+      return;
+    }
     try {
       const r0 = await ctx.model.Usermodel.findOne({
         where: {
@@ -71,6 +74,11 @@ export default class UserController extends Controller {
         where: {
           userid: r0.id,
         },
+        order: [
+          [ 'id', 'ASC' ],
+        ],
+        offset: (Number(index) - 1) * Number(size),
+        limit: Number(size),
       });
       const ids = r.map(item => {
         return item.id;
@@ -83,6 +91,7 @@ export default class UserController extends Controller {
       });
       ctx.body = Result.Sucess(r);
     } catch (error) {
+      this.logger.error(error);
       ctx.body = Result.ServerError();
     }
   }

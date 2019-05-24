@@ -1,7 +1,7 @@
 import { Controller } from 'egg';
 
 import Result from '../helper/result';
-import { createRuleProvisionUdid } from '../helper/validRule';
+import { createRuleProvisionUdid, createRulePage } from '../helper/validRule';
 import moment = require('moment');
 
 export default class DeviceController extends Controller {
@@ -49,8 +49,12 @@ export default class DeviceController extends Controller {
 
     public async applist() {
         const { ctx } = this;
-        ctx.validate(createRuleProvisionUdid, ctx.query);
-        const { certUdid } = ctx.query;
+        ctx.validate(Object.assign(createRuleProvisionUdid, createRulePage), ctx.query);
+        const { certUdid, index, size } = ctx.query;
+        if (Number(index) < 1 || Number(size) < 0) {
+            ctx.body = Result.error(400, 'index or size error. check it');
+            return;
+          }
         const id = await ctx.service.cert.certProvisionid(certUdid);
         if (id === null) {
             ctx.body = Result.error(404, '没有该证书');
@@ -60,6 +64,13 @@ export default class DeviceController extends Controller {
             where: {
                 provision_id: id.id,
             },
+
+            order: [
+                [ 'id', 'ASC' ],
+            ],
+
+            offset: (Number(index) - 1) * Number(size),
+            limit: Number(size),
         });
         ctx.body = Result.Sucess(r, false);
     }
