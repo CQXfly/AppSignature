@@ -43,4 +43,20 @@ export default class Result {
         return r;
     }
 
+    static SucessCount(data: object | null, all_count: number, cry: boolean = false, code: number = 200, message: string = 'success'): Result {
+        if (data === null) {
+            return Result.error(204, '无数据');
+        }
+
+        const r = new Result();
+        r.code = code;
+        r.message = message;
+        r.data = {
+            all_count,
+            cry,
+            result: cry ? cry_aes(JSON.stringify(data)) : data,
+        };
+        return r;
+    }
+
 }

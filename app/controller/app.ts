@@ -299,6 +299,12 @@ export default class AppController extends Controller {
             offset: (Number(index) - 1) * Number(size),
             limit: Number(size),
         });
+
+        const all_count = await ctx.model.Appmodel.count({
+            where: {
+                app_name: { [Op.like]: `%${appName}%` },
+            },
+        });
         // TODO:
         // 查出每个的current_install_num
         const ids = r.map(item => {
@@ -310,7 +316,7 @@ export default class AppController extends Controller {
                 current_device_num: nums[index],
             });
         });
-        ctx.body = Result.Sucess(r);
+        ctx.body = Result.SucessCount(r, all_count);
     } catch (error) {
         ctx.body = Result.ServerError();
     }
@@ -525,7 +531,7 @@ export default class AppController extends Controller {
    */
   public async getAppList() {
       const { ctx } = this;
-      ctx.validate(createRulePage, ctx.request.body);
+      ctx.validate(createRulePage, ctx.query);
       const { index, size } = ctx.query;
       if (Number(index) < 1 || Number(size) < 0) {
         ctx.body = Result.error(400, 'index or size error. check it');
@@ -540,6 +546,9 @@ export default class AppController extends Controller {
             offset: (Number(index) - 1) * Number(size),
             limit: Number(size),
         });
+
+        const all_count = await ctx.model.Appmodel.count();
+
         const ids = r.map(item => {
             return item.id;
         });
@@ -549,7 +558,7 @@ export default class AppController extends Controller {
                 current_device_num: nums[index],
             });
         });
-        ctx.body = Result.Sucess(r, true);
+        ctx.body = Result.SucessCount(r, all_count, true);
       } catch (e) {
         ctx.body = Result.error(400, 'fuck');
       }

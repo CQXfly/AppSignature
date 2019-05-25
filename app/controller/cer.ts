@@ -72,6 +72,9 @@ export default class DeviceController extends Controller {
             offset: (Number(index) - 1) * Number(size),
             limit: Number(size),
         });
-        ctx.body = Result.Sucess(r, false);
+        const all_count = await ctx.model.Appmodel.count({where: {
+            provision_id: id.id,
+        }});
+        ctx.body = Result.SucessCount(r, all_count, false);
     }
 }

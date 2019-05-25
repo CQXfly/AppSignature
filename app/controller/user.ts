@@ -80,6 +80,12 @@ export default class UserController extends Controller {
         offset: (Number(index) - 1) * Number(size),
         limit: Number(size),
       });
+
+      const all_count = await ctx.model.Appmodel.count({
+        where: {
+          userid: r0.id,
+        },
+      });
       const ids = r.map(item => {
         return item.id;
       });
@@ -89,7 +95,7 @@ export default class UserController extends Controller {
             current_device_num: nums[index],
         });
       });
-      ctx.body = Result.Sucess(r);
+      ctx.body = Result.SucessCount(r, all_count);
     } catch (error) {
       this.logger.error(error);
       ctx.body = Result.ServerError();
