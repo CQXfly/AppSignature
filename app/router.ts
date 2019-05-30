@@ -23,7 +23,7 @@ export default (app: Application) => {
   router.get('/app/gameover', auth, controller.app.findAppStatus);
 
   // APP列表、并且能根据到期时间、最大用户量等进行排序 /分页返回
-  router.get('/app/applist', controller.app.getAppList);
+  router.get('/app/applist', auth, controller.app.getAppList);
   // 删除App
   router.delete('/app/delete', controller.app.delete);
   // 搜索APP

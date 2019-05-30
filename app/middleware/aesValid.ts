@@ -7,10 +7,10 @@ module.exports = (options, app: Application) => {
         console.log(options);
         console.log(app);
         console.log(ctx);
-        if (ctx.method === 'GET') {
+        if (ctx.method === 'GET' && ctx.query.cry) {
             ctx.query = cry_daes(ctx.query.cry);
-        } else {
-            cry_daes(ctx.request.body.cry);
+        } else if (ctx.method === 'POST' && ctx.request.body.cry) {
+            ctx.request.body = cry_daes(ctx.request.body.cry);
         }
 
         await next();
