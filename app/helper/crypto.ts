@@ -28,11 +28,12 @@ function cry_daes(src: any): any {
     } catch (error) {
         const message: string = error.message;
         let i = 0;
-        const t = 'Unexpected token  in JSON at position ';
-        // if (message.includes(t)) {
+
+        const t = 'Unexpected token  in JSON at position ';
+
         const r = message.substr(t.length, message.length - t.length);
         i = Number(r);
-        // }
+
         return JSON.parse(decode.substring(i, 0));
     }
 }
